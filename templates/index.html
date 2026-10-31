@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Spam Detection</title>
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: #f1f5f9;
+            color: #1e293b;
+            font-family: Arial, sans-serif
+        }
+
+        .wrap {
+            max-width: 950px;
+            width: 92%;
+            margin: 35px auto
+        }
+
+        header {
+            background: linear-gradient(135deg, #173b70, #2873b8);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 22px
+        }
+
+        header h1 {
+            margin: 0 0 10px
+        }
+
+        header p {
+            margin: 0;
+            color: #e4efff
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 13px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px #0f172a10
+        }
+
+        h2 {
+            color: #173b70;
+            margin-top: 0
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 130px;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            font-size: 15px
+        }
+
+        button,
+        .clear {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 12px 20px;
+            border: 0;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 15px
+        }
+
+        button {
+            background: #2563a6;
+            color: white
+        }
+
+        .clear {
+            background: #e2e8f0;
+            color: #334155;
+            margin-left: 7px
+        }
+
+        .result {
+            padding: 17px;
+            border-radius: 9px;
+            margin-top: 18px
+        }
+
+        .spam {
+            background: #fee2e2;
+            color: #991b1b
+        }
+
+        .ham {
+            background: #dcfce7;
+            color: #166534
+        }
+
+        .warn {
+            background: #fff7ed;
+            color: #9a3412
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px
+        }
+
+        .metric {
+            text-align: center;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 9px
+        }
+
+        .metric b {
+            display: block;
+            font-size: 24px;
+            color: #173b70
+        }
+
+        .metric span {
+            font-size: 13px;
+            color: #64748b
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px
+        }
+
+        td,
+        th {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: center
+        }
+
+        th {
+            background: #eff6ff
+        }
+
+        pre {
+            white-space: pre-wrap;
+            background: #f1f5f9;
+            padding: 14px;
+            border-radius: 8px;
+            overflow: auto
+        }
+
+        summary {
+            cursor: pointer;
+            color: #2563a6;
+            font-weight: bold;
+            margin-top: 14px
+        }
+
+        .note {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            padding: 10px
+        }
+
+        @media(max-width:600px) {
+            .metrics {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .card {
+                padding: 17px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <h1>SMS Spam Detection</h1>
+            <p>Machine Learning based SMS classification using TF-IDF and Naive Bayes</p>
+        </header>
+        <section class="card">
+            <h2>Check Your Message</h2>
+            <form method="POST">
+                <textarea name="message" placeholder="Type or paste your SMS message here..."
+                    required>{{ message or "" }}</textarea><br>
+                <button type="submit">Check Message</button><a class="clear" href="/">Clear</a>
+            </form>
+            {% if result %}
+            {% if result == "SPAM" %}<div class="result spam">
+                <h3>⚠ SPAM MESSAGE</h3>
+                <p>This message may be unwanted or promotional.</p><b>Spam probability score: {{ score }}%</b>
+            </div>
+            {% elif result == "NOT SPAM" %}<div class="result ham">
+                <h3>✓ NOT SPAM</h3>
+                <p>This message appears to be a normal message.</p><b>Spam probability score: {{ score }}%</b>
+            </div>
+            {% else %}<div class="result warn">{{ result }}</div>{% endif %}
+            {% endif %}
+            <p class="note">Note: This is an ML prediction, not a guarantee. Do not enter sensitive personal
+                information.</p>
+        </section>
+        {% if metrics %}
+        <section class="card">
+            <h2>Model Performance</h2>
+            <div class="metrics">
+                <div class="metric"><b>{{ metrics.accuracy }}%</b><span>Accuracy</span></div>
+                <div class="metric"><b>{{ metrics.precision }}%</b><span>Precision</span></div>
+                <div class="metric"><b>{{ metrics.recall }}%</b><span>Recall</span></div>
+                <div class="metric"><b>{{ metrics.f1 }}%</b><span>F1 Score</span></div>
+            </div>
+            <details>
+                <summary>View Confusion Matrix</summary>
+                <table>
+                    <tr>
+                        <th></th>
+                        <th>Predicted Not Spam</th>
+                        <th>Predicted Spam</th>
+                    </tr>
+                    <tr>
+                        <th>Actual Not Spam</th>
+                        <td>{{ cm[0][0] }}</td>
+                        <td>{{ cm[0][1] }}</td>
+                    </tr>
+                    <tr>
+                        <th>Actual Spam</th>
+                        <td>{{ cm[1][0] }}</td>
+                        <td>{{ cm[1][1] }}</td>
+                    </tr>
+                </table>
+            </details>
+            <details>
+                <summary>View Classification Report</summary>
+                <pre>{{ report }}</pre>
+            </details>
+        </section>
+        <section class="card">
+            <h2>Dataset Information</h2>
+            <p><b>Dataset:</b> UCI SMS Spam Collection</p>
+            <p><b>Total messages:</b> {{ metrics.total }}</p>
+            <p><b>Normal messages (Ham):</b> {{ metrics.ham }}</p>
+            <p><b>Spam messages:</b> {{ metrics.spam }}</p>
+            <p class="note">Dataset first run par automatically download hoga. First run ke liye internet connection
+                zaroori hai.</p>
+        </section>
+        {% elif model_error %}<section class="card">
+            <h2>Model Loading Error</h2>
+            <div class="result warn">{{ model_error }}</div>
+            <p>Internet connection check karke app restart karein.</p>
+        </section>{% endif %}
+        <footer>SMS Spam Detection ML Project | TF-IDF + Multinomial Naive Bayes</footer>
+    </div>
+</body>
+
+</html>
